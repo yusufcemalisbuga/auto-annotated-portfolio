@@ -1,105 +1,425 @@
-@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,400;0,500;1,400;1,500&family=DM+Mono:ital,wght@0,400;0,500;1,400;1,500&display=swap')
+@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,100..900;1,100..900&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Inter:wght@100..900&display=swap')
 layer(base);
 
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/container-queries';
 
+/* ========================================
+   CSS Custom Properties & Theme Configuration
+   ======================================== */
 @theme {
-    --font-body: var(--theme-font-body, monospace);
+    /* Typography */
+    --font-body: var(--theme-font-body, 'DM Mono', monospace);
+    --font-heading: var(--theme-font-heading, 'Azeret Mono', monospace);
+    --font-ui: var(--theme-font-ui, 'Inter', system-ui);
+    
+    /* Base Colors */
     --background-color-main: var(--theme-dark);
     --background-color-inverse: var(--theme-on-dark);
+    --background-color-subtle: color-mix(in srgb, var(--theme-dark) 95%, var(--theme-light));
     --text-color-main: var(--theme-on-dark);
     --text-color-inverse: var(--theme-dark);
+    --text-color-muted: color-mix(in srgb, var(--theme-on-dark) 70%, transparent);
+    
+    /* Semantic Colors */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+    
+    /* Layout */
     --container-8xl: 96rem;
+    --container-9xl: 108rem;
     --spacing-icon: 1em;
+    --gutter: clamp(1rem, 5vw, 3rem);
+    
+    /* Animations */
+    --animation-duration: 200ms;
+    --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-full: 9999px;
 }
 
+/* ========================================
+   Base Layer Styles
+   ======================================== */
 @layer base {
+    /* Root & HTML Setup */
+    :root {
+        color-scheme: dark light;
+        scrollbar-gutter: stable;
+        
+        /* Fluid Typography Scale */
+        --fluid-min-width: 320;
+        --fluid-max-width: 1440;
+        --fluid-min-size: 16;
+        --fluid-max-size: 20;
+        --fluid-min-ratio: 1.2;
+        --fluid-max-ratio: 1.333;
+        
+        /* Calculated fluid values */
+        --fluid-bp: calc((var(--fluid-max-width) - var(--fluid-min-width)) * 1px);
+        --fluid-bp-ratio: calc((100vw - var(--fluid-min-width) * 1px) / var(--fluid-bp));
+    }
+    
     html {
         @apply antialiased font-body;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-synthesis: none;
+        hanging-punctuation: first last;
+        
+        /* Smooth scrolling with reduced motion support */
+        @media (prefers-reduced-motion: no-preference) {
+            scroll-behavior: smooth;
+        }
     }
+    
     body {
-        @apply flex flex-col min-h-screen;
+        @apply flex flex-col min-h-screen bg-main text-main;
+        text-wrap: pretty;
+        font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+        transition: background-color var(--animation-duration) var(--animation-timing);
     }
+    
     body > div {
         @apply flex flex-col grow;
     }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        @apply break-words;
-        line-height: 1.15;
-        font-weight: var(--theme-heading-weight);
-        text-transform: var(--theme-heading-case);
+    
+    /* Focus Visible Styles */
+    :focus-visible {
+        @apply outline outline-2 outline-offset-2 outline-current;
+        border-radius: var(--radius-sm);
     }
-
-    b,
-    strong {
+    
+    /* Selection Styles */
+    ::selection {
+        background-color: var(--background-color-inverse);
+        color: var(--text-color-inverse);
+    }
+    
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-heading break-words;
+        line-height: calc(1em + 0.5rem);
+        font-weight: var(--theme-heading-weight, 500);
+        text-transform: var(--theme-heading-case, none);
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+        
+        /* Fluid typography */
+        font-size: clamp(
+            calc(1rem * var(--font-level, 1) * var(--fluid-min-ratio)),
+            calc(1rem * var(--font-level, 1) * (var(--fluid-min-ratio) + (var(--fluid-max-ratio) - var(--fluid-min-ratio)) * var(--fluid-bp-ratio))),
+            calc(1rem * var(--font-level, 1) * var(--fluid-max-ratio))
+        );
+    }
+    
+    h1 { --font-level: 2.5; }
+    h2 { --font-level: 2; }
+    h3 { --font-level: 1.75; }
+    h4 { --font-level: 1.5; }
+    h5 { --font-level: 1.25; }
+    h6 { --font-level: 1.125; }
+    
+    /* Text Elements */
+    p {
+        text-wrap: pretty;
+        line-height: 1.7;
+    }
+    
+    b, strong {
         @apply font-medium;
+        font-weight: 600;
     }
-
+    
+    em, i {
+        font-style: italic;
+    }
+    
+    mark {
+        background: linear-gradient(120deg, #fef08a 0%, #fef08a 100%);
+        background-repeat: no-repeat;
+        background-size: 100% 40%;
+        background-position: 0 60%;
+        padding: 0 0.2em;
+    }
+    
+    /* Links */
+    a:not([class]) {
+        @apply text-current underline decoration-dotted underline-offset-2;
+        transition: all var(--animation-duration) var(--animation-timing);
+        
+        &:hover {
+            @apply decoration-solid;
+        }
+    }
+    
+    /* Lists */
+    ul, ol {
+        padding-left: 1.5em;
+    }
+    
+    li {
+        margin-block: 0.25em;
+    }
+    
+    /* Code Elements */
+    code:not(pre code) {
+        @apply px-1 py-0.5 rounded text-sm;
+        background-color: var(--background-color-subtle);
+        font-family: var(--font-body);
+    }
+    
+    pre {
+        @apply overflow-x-auto rounded-lg p-4;
+        tab-size: 2;
+    }
+    
+    /* Form Elements */
+    input, textarea, select {
+        @apply w-full px-3 py-2 rounded-md border;
+        border-color: var(--text-color-muted);
+        background-color: transparent;
+        transition: all var(--animation-duration) var(--animation-timing);
+        
+        &:focus {
+            @apply outline-none ring-2 ring-current ring-offset-2;
+            ring-offset-color: var(--background-color-main);
+        }
+    }
+    
     select {
-        @apply bg-no-repeat appearance-none cursor-pointer;
-        background-image:
-            linear-gradient(45deg, transparent 50%, currentColor 0),
-            linear-gradient(135deg, currentColor 50%, transparent 0);
-        background-position:
-            calc(100% - 18px) calc(1px + 50%),
-            calc(100% - 12px) calc(1px + 50%);
-        background-size:
-            6px 6px,
-            6px 6px;
+        @apply bg-no-repeat appearance-none cursor-pointer pr-8;
+        background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6 9L2 5h8z' fill='currentColor'/%3E%3C/svg%3E");
+        background-position: right 0.5rem center;
+        background-size: 1rem;
     }
+    
     option {
         color: initial;
+        background-color: var(--background-color-main);
     }
+    
+    button {
+        @apply px-4 py-2 rounded-md font-medium transition-all cursor-pointer;
+        
+        &:disabled {
+            @apply opacity-50 cursor-not-allowed;
+        }
+    }
+    
+    /* Tables */
+    table {
+        @apply w-full border-collapse;
+    }
+    
+    th, td {
+        @apply px-3 py-2 text-left border;
+        border-color: var(--text-color-muted);
+    }
+    
+    /* Media Elements */
+    img, video, iframe {
+        @apply max-w-full h-auto;
+    }
+    
+    img {
+        @apply rounded-lg;
+        image-rendering: crisp-edges;
+    }
+    
+    /* Horizontal Rule */
+    hr {
+        @apply my-8 border-0 h-px;
+        background: linear-gradient(to right, transparent, var(--text-color-muted), transparent);
+    }
+    
+    /* Details/Summary */
+    details {
+        @apply my-4 p-4 rounded-lg border;
+        border-color: var(--text-color-muted);
+    }
+    
+    summary {
+        @apply cursor-pointer font-medium;
+        
+        &::-webkit-details-marker {
+            display: none;
+        }
+        
+        &::before {
+            content: '▶';
+            display: inline-block;
+            margin-right: 0.5em;
+            transition: transform var(--animation-duration) var(--animation-timing);
+        }
+    }
+    
+    details[open] summary::before {
+        transform: rotate(90deg);
+    }
+    
+    /* Scrollbar Styling */
+    @supports (scrollbar-width: thin) {
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--text-color-muted) transparent;
+        }
+    }
+    
+    ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background-color: var(--text-color-muted);
+        border-radius: var(--radius-full);
+        border: 3px solid transparent;
+        background-clip: content-box;
+    }
+}
 
-    /* Color themes */
-    :where([data-theme='colors-b']) {
-        --background-color-main: var(--theme-light);
-        --background-color-inverse: var(--theme-on-light);
-        --text-color-main: var(--theme-on-light);
-        --text-color-inverse: var(--theme-light);
+/* ========================================
+   Color Theme Variations
+   ======================================== */
+@layer base {
+    /* Light Theme */
+    :where([data-theme='colors-b'], [data-theme='light']) {
+        --background-color-main: var(--theme-light, #ffffff);
+        --background-color-inverse: var(--theme-on-light, #000000);
+        --background-color-subtle: color-mix(in srgb, var(--theme-light) 95%, var(--theme-dark));
+        --text-color-main: var(--theme-on-light, #000000);
+        --text-color-inverse: var(--theme-light, #ffffff);
+        --text-color-muted: color-mix(in srgb, var(--theme-on-light) 60%, transparent);
     }
-    :where([data-theme='colors-c']) {
+    
+    /* Primary Theme */
+    :where([data-theme='colors-c'], [data-theme='primary']) {
         --background-color-main: var(--theme-primary);
         --background-color-inverse: var(--theme-on-primary);
         --text-color-main: var(--theme-on-primary);
         --text-color-inverse: var(--theme-primary);
     }
-    :where([data-theme='colors-d']) {
+    
+    /* Secondary Theme */
+    :where([data-theme='colors-d'], [data-theme='secondary']) {
         --background-color-main: var(--theme-secondary);
         --background-color-inverse: var(--theme-on-secondary);
         --text-color-main: var(--theme-on-secondary);
         --text-color-inverse: var(--theme-secondary);
     }
-    :where([data-theme='colors-e']) {
+    
+    /* Complementary Theme */
+    :where([data-theme='colors-e'], [data-theme='complementary']) {
         --background-color-main: var(--theme-complementary);
         --background-color-inverse: var(--theme-on-complementary);
         --text-color-main: var(--theme-on-complementary);
         --text-color-inverse: var(--theme-complementary);
     }
+    
+    /* Apply theme colors */
     :where([data-theme^='colors-']):not([data-theme='colors-f']) {
         @apply bg-main text-main;
     }
-
-    /* Fixing issues caused by data wrapper added via auto annotations */
-    form data:has([class*='sm:col-span-2']) {
-        @apply sm:col-span-2;
-    }
-    nav data:has([class*='sm:col-start-2']) {
-        @apply sm:col-start-2;
-    }
-    li data:has([class*='link-fill']) {
-        @apply inline-flex;
+    
+    /* Auto Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        :where([data-theme='auto']) {
+            --background-color-main: var(--theme-dark);
+            --background-color-inverse: var(--theme-on-dark);
+            --text-color-main: var(--theme-on-dark);
+            --text-color-inverse: var(--theme-dark);
+        }
     }
 }
 
+/* ========================================
+   Component Styles
+   ======================================== */
+@layer components {
+    /* Button Variants */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium;
+        @apply transition-all duration-200 cursor-pointer;
+        @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+        
+        &-primary {
+            @apply bg-inverse text-inverse hover:opacity-90;
+        }
+        
+        &-secondary {
+            @apply border-2 border-current hover:bg-inverse hover:text-inverse;
+        }
+        
+        &-ghost {
+            @apply hover:bg-current hover:bg-opacity-10;
+        }
+        
+        &-sm { @apply px-3 py-1 text-sm; }
+        &-lg { @apply px-6 py-3 text-lg; }
+        &-xl { @apply px-8 py-4 text-xl; }
+    }
+    
+    /* Card Component */
+    .card {
+        @apply rounded-lg border p-6;
+        border-color: var(--text-color-muted);
+        background-color: color-mix(in srgb, var(--background-color-main) 95%, var(--background-color-inverse));
+        
+        &-hover {
+            @apply transition-all hover:shadow-lg hover:-translate-y-1;
+        }
+        
+        &-glass {
+            backdrop-filter: blur(10px);
+            background-color: color-mix(in srgb, var(--background-color-main) 80%, transparent);
+        }
+    }
+    
+    /* Badge Component */
+    .badge {
+        @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+        
+        &-success { @apply bg-green-100 text-green-800; }
+        &-warning { @apply bg-yellow-100 text-yellow-800; }
+        &-error { @apply bg-red-100 text-red-800; }
+        &-info { @apply bg-blue-100 text-blue-800; }
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+        @apply inline-block w-6 h-6 border-2 border-current rounded-full;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
 @layer utilities {
+    /* Enhanced Prose Styles */
     .prose {
         --tw-prose-body: var(--text-color-main);
         --tw-prose-headings: var(--text-color-main);
@@ -110,42 +430,183 @@ layer(base);
         --tw-prose-bullets: var(--text-color-main);
         --tw-prose-hr: var(--text-color-main);
         --tw-prose-quotes: var(--text-color-main);
-        --tw-prose-quote-borders: var(--text-color-main);
-        --tw-prose-captions: var(--text-color-main);
+        --tw-prose-quote-borders: var(--text-color-muted);
+        --tw-prose-captions: var(--text-color-muted);
         --tw-prose-kbd: var(--text-color-main);
         --tw-prose-kbd-shadows: from var(--text-color-main) r g b;
         --tw-prose-code: var(--text-color-main);
         --tw-prose-pre-code: var(--text-color-inverse);
         --tw-prose-pre-bg: var(--background-color-inverse);
-        --tw-prose-th-borders: var(--text-color-main);
-        --tw-prose-td-borders: var(--text-color-main);
-
+        --tw-prose-th-borders: var(--text-color-muted);
+        --tw-prose-td-borders: var(--text-color-muted);
+        
+        max-width: 65ch;
+        
         a {
-            @apply underline font-normal;
+            @apply underline font-normal decoration-2 underline-offset-2;
+            text-decoration-color: var(--text-color-muted);
+            transition: all var(--animation-duration) var(--animation-timing);
         }
-
+        
         a:hover {
             @apply no-underline;
+            color: var(--theme-primary, var(--text-color-main));
         }
-
+        
         :where(h1, h2, h3, h4, h5, h6) {
-            font-weight: var(--theme-heading-weight);
+            font-weight: var(--theme-heading-weight, 600);
             line-height: 1.15;
+            scroll-margin-top: 2rem;
         }
-
+        
+        blockquote {
+            @apply border-l-4 pl-4 italic;
+            border-color: var(--text-color-muted);
+        }
+        
         blockquote p:first-of-type::before,
         blockquote p:last-of-type::after {
             content: none;
         }
+        
+        code {
+            @apply before:content-none after:content-none;
+        }
+        
+        img {
+            @apply rounded-lg shadow-lg;
+        }
+        
+        /* Table enhancements */
+        table {
+            @apply overflow-hidden rounded-lg;
+        }
+        
+        thead {
+            @apply bg-inverse bg-opacity-5;
+        }
+        
+        tbody tr {
+            @apply transition-colors hover:bg-inverse hover:bg-opacity-5;
+        }
+    }
+    
+    /* Text Utilities */
+    .text-balance {
+        text-wrap: balance;
+    }
+    
+    .text-pretty {
+        text-wrap: pretty;
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Layout Utilities */
+    .container-fluid {
+        width: 100%;
+        padding-inline: var(--gutter);
+    }
+    
+    .aspect-golden {
+        aspect-ratio: 1.618 / 1;
+    }
+    
+    .grid-auto-fit {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    }
+    
+    .grid-auto-fill {
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+    }
+    
+    /* Visual Effects */
+    .glassmorphism {
+        backdrop-filter: blur(10px) saturate(180%);
+        background-color: color-mix(in srgb, var(--background-color-main) 70%, transparent);
+        border: 1px solid color-mix(in srgb, var(--text-color-main) 20%, transparent);
+    }
+    
+    .neumorphism {
+        background: var(--background-color-main);
+        box-shadow: 
+            20px 20px 60px color-mix(in srgb, var(--background-color-main) 70%, black),
+            -20px -20px 60px color-mix(in srgb, var(--background-color-main) 70%, white);
+    }
+    
+    .glow {
+        box-shadow: 
+            0 0 20px color-mix(in srgb, currentColor 30%, transparent),
+            0 0 40px color-mix(in srgb, currentColor 20%, transparent),
+            0 0 60px color-mix(in srgb, currentColor 10%, transparent);
+    }
+    
+    /* Animation Utilities */
+    .animate-in {
+        animation: fadeIn var(--animation-duration) var(--animation-timing) both;
+    }
+    
+    .animate-slide-up {
+        animation: slideUp var(--animation-duration) var(--animation-timing) both;
+    }
+    
+    .animate-scale {
+        animation: scale var(--animation-duration) var(--animation-timing) both;
+    }
+    
+    .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* Accessibility Utilities */
+    .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+    
+    .focus-within-ring {
+        @apply focus-within:ring-2 focus-within:ring-current focus-within:ring-offset-2;
+    }
+    
+    /* Responsive Utilities */
+    .hide-on-mobile {
+        @media (max-width: 640px) {
+            display: none;
+        }
+    }
+    
+    .show-on-mobile {
+        @media (min-width: 641px) {
+            display: none;
+        }
     }
 }
 
+/* ========================================
+   Custom Utility Classes
+   ======================================== */
 @utility bottom-shadow-* {
-    box-shadow: 0 calc(--value(integer) * 1px) 0 0 currentColor;
+    box-shadow: 0 calc(var(--value) * 1px) 0 0 currentColor;
+}
+
+@utility top-shadow-* {
+    box-shadow: 0 calc(var(--value) * -1px) 0 0 currentColor;
 }
 
 @utility link-fill {
-    @apply transition-all text-main;
+    @apply relative inline-block transition-all text-main no-underline;
     background-image: linear-gradient(
         to bottom,
         var(--background-color-inverse) 0%,
@@ -153,9 +614,247 @@ layer(base);
     );
     background-size: 100% 0%;
     background-repeat: no-repeat;
-
+    background-position: bottom;
+    padding: 0.125em 0.25em;
+    
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: currentColor;
+        transform: scaleX(0);
+        transform-origin: bottom right;
+        transition: transform var(--animation-duration) var(--animation-timing);
+    }
+    
     &:hover {
         @apply text-inverse;
         background-size: 100% 100%;
+        
+        &::after {
+            transform: scaleX(1);
+            transform-origin: bottom left;
+        }
     }
+}
+
+@utility link-slide {
+    @apply relative inline-block overflow-hidden;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, currentColor, transparent);
+        transform: translateX(-100%);
+        transition: transform var(--animation-duration) var(--animation-timing);
+    }
+    
+    &:hover::before {
+        transform: translateX(100%);
+    }
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+@media print {
+    * {
+        background: transparent !important;
+        color: black !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    a, a:visited {
+        text-decoration: underline;
+    }
+    
+    a[href]::after {
+        content: " (" attr(href) ")";
+    }
+    
+    abbr[title]::after {
+        content: " (" attr(title) ")";
+    }
+    
+    pre, blockquote {
+        border: 1px solid #999;
+        page-break-inside: avoid;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    tr, img {
+        page-break-inside: avoid;
+    }
+    
+    img {
+        max-width: 100% !important;
+    }
+    
+    p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+    }
+    
+    h2, h3 {
+        page-break-after: avoid;
+    }
+}
+
+/* ========================================
+   High Contrast Mode Support
+   ======================================== */
+@media (prefers-contrast: high) {
+    * {
+        border-width: 2px !important;
+    }
+    
+    button, a, input, select, textarea {
+        outline: 2px solid currentColor !important;
+        outline-offset: 2px !important;
+    }
+}
+
+/* ========================================
+   Motion Preference Support
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ========================================
+   Container Queries Support
+   ======================================== */
+@container (min-width: 30rem) {
+    .container-responsive {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@container (min-width: 60rem) {
+    .container-responsive {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ========================================
+   Custom Form Validation Styles
+   ======================================== */
+input:valid,
+textarea:valid,
+select:valid {
+    &:user-valid {
+        border-color: var(--color-success);
+    }
+}
+
+input:invalid,
+textarea:invalid,
+select:invalid {
+    &:user-invalid {
+        border-color: var(--color-error);
+    }
+}
+
+/* ========================================
+   Loading States
+   ======================================== */
+[data-loading="true"] {
+    position: relative;
+    pointer-events: none;
+    
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+}
+
+/* ========================================
+   Data Wrapper Fixes
+   ======================================== */
+form data:has([class*='sm:col-span-2']) {
+    @apply sm:col-span-2;
+}
+
+nav data:has([class*='sm:col-start-2']) {
+    @apply sm:col-start-2;
+}
+
+li data:has([class*='link-fill']) {
+    @apply inline-flex;
 }
